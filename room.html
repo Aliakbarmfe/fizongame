@@ -175,16 +175,19 @@
       <h3 id="resTitle">نتیجه راند</h3>
       <p id="resDesc"></p>
       <p id="resChoices" style="color: #fff; font-weight: bold; margin-top: 0.5rem;"></p>
+      <p style="color: #f59e0b; font-size: 0.85rem; margin-top: 1rem; border-top: 1px solid #334155; padding-top: 0.5rem;">
+        برای رفتن به راند بعدی، روی دکمه «آماده هستم» کلیک کنید.
+      </p>
     </div>
   </div>
 
   <!-- Modal: Final Result -->
   <div class="modal-overlay" id="finalModal">
     <div class="modal">
-      <h3>نتیجه نهایی بازی</h3>
+      <h3>🏆 نتیجه نهایی بازی</h3>
       <p id="finalWinner" style="font-size: 1.2rem; color: #f59e0b; font-weight: bold; margin: 1rem 0;"></p>
-      <p id="finalScores"></p>
-      <button class="btn" style="width: 100%; margin-top: 1rem;" onclick="leaveRoom()">خروج به صفحه اصلی</button>
+      <p id="finalScores" style="color: #fff; font-weight: bold;"></p>
+      <button class="btn" style="width: 100%; margin-top: 1.5rem;" onclick="leaveRoom()">خروج به صفحه اصلی</button>
     </div>
   </div>
 
@@ -192,7 +195,7 @@
     let db, roomId, isSpectatorMode, currentUser;
     let roomRef, myRole = null; // 'p1', 'p2', 'observer', 'spectator'
     let selectedChoice = null;
-    let isTimerRunning = false;
+    let activeInterval = null;
 
     // Toast
     function showToast(msg, type = 'info') {
@@ -280,6 +283,12 @@
 
       // Listen for Room Updates
       roomRef.on('value', handleRoomUpdate);
+
+      // Global Timer Sync for ALL users
+      roomRef.child('timer').on('value', (s) => {
+        const val = s.val();
+        document.getElementById('timerDisplay').innerText = (val !== null && val !== undefined) ? val : '--';
+      });
     }
 
     function handleRoomUpdate(snapshot) {
@@ -311,7 +320,7 @@
       document.getElementById('p1Score').innerText = room.scores ? room.scores.p1 || 0 : 0;
       document.getElementById('p2Score').innerText = room.scores ? room.scores.p2 || 0 : 0;
 
-      document.getElementById('roundDisplay').innerText = `راند ${room.currentRound} از ${room.maxRounds}`;
+      document.getElementById('roundDisplay').innerText = `راند ${room.currentRound || 1} از ${room.maxRounds || 3}`;
 
       // Ready Button State
       const readyBtn = document.getElementById('readyBtn');
@@ -321,7 +330,7 @@
         readyBtn.className = isReady ? 'btn btn-danger' : 'btn btn-success';
       }
 
-      // Check if both ready and start countdown
+      // Check if both ready and start countdown (Only P1 triggers the clock update to Database)
       if (p1 && p2 && room.ready && room.ready.p1 && room.ready.p2 && room.status === 'waiting' && myRole === 'p1') {
         startStartCountdown();
       }
@@ -355,39 +364,39 @@
       await roomRef.child(`ready/${myRole}`).set(!currentState);
     }
 
-    // Start 10s Countdown (Initiated by P1)
+    // Start 10s Countdown (Driven by P1 to DB, synced to all)
     async function startStartCountdown() {
+      if (activeInterval) clearInterval(activeInterval);
       await roomRef.child('status').set('starting');
       let count = 10;
+      await roomRef.child('timer').set(count);
 
-      const interval = setInterval(async () => {
-        await roomRef.child('timer').set(count);
+      activeInterval = setInterval(async () => {
         count--;
-        if (count < 0) {
-          clearInterval(interval);
+        await roomRef.child('timer').set(count);
+        if (count <= 0) {
+          clearInterval(activeInterval);
           startRound();
         }
       }, 1000);
-
-      roomRef.child('timer').on('value', (s) => {
-        const val = s.val();
-        if (val !== null) document.getElementById('timerDisplay').innerText = val;
-      });
     }
 
-    // Start 15s Round Selection
+    // Start 15s Round Selection (Driven by P1 to DB, synced to all)
     async function startRound() {
+      if (activeInterval) clearInterval(activeInterval);
       await roomRef.child('status').set('playing');
       await roomRef.child('choices').remove();
       selectedChoice = null;
       resetChoiceStyles();
 
       let count = 15;
-      const interval = setInterval(async () => {
-        await roomRef.child('timer').set(count);
+      await roomRef.child('timer').set(count);
+
+      activeInterval = setInterval(async () => {
         count--;
-        if (count < 0) {
-          clearInterval(interval);
+        await roomRef.child('timer').set(count);
+        if (count <= 0) {
+          clearInterval(activeInterval);
           if (myRole === 'p1') processRoundResult();
         }
       }, 1000);
@@ -442,10 +451,10 @@
         (c1 === 'scissors' && c2 === 'paper')
       ) {
         winner = 'p1';
-        reason = `${room.players.p1.name} برنده این راند شد.`;
+        reason = `${room.players.p1.name} برنده این راند شد!`;
       } else {
         winner = 'p2';
-        reason = `${room.players.p2.name} برنده این راند شد.`;
+        reason = `${room.players.p2.name} برنده این راند شد!`;
       }
 
       // Update Scores
@@ -462,7 +471,8 @@
         p2Choice: mapChoice(c2),
         p1Name: room.players.p1.name,
         p2Name: room.players.p2.name,
-        scores: currentScores
+        scores: currentScores,
+        timestamp: Date.now()
       };
 
       await roomRef.child('scores').set(currentScores);
@@ -478,6 +488,7 @@
           await roomRef.child('currentRound').set(room.currentRound + 1);
           await roomRef.child('ready').remove();
           await roomRef.child('status').set('waiting');
+          await roomRef.child('timer').set('--');
         }, 4000);
       }
     }
@@ -487,7 +498,6 @@
       const res = snap.val();
       if (!res) return;
 
-      const modal = document.getElementById('resultModal');
       const title = document.getElementById('resTitle');
       const desc = document.getElementById('resDesc');
       const choices = document.getElementById('resChoices');
@@ -510,7 +520,7 @@
       choices.innerText = `${res.p1Name} (${res.p1Choice}) - ${res.p2Name} (${res.p2Choice})`;
 
       openModal('resultModal');
-      setTimeout(() => { closeModal('resultModal'); }, 3500);
+      setTimeout(() => { closeModal('resultModal'); }, 3800);
     });
 
     // Handle Match Finished
@@ -523,9 +533,9 @@
         const s2 = room.scores ? room.scores.p2 || 0 : 0;
 
         let winnerText = '';
-        if (s1 > s2) winnerText = `🏆 برنده نهایی: ${room.players.p1.name}`;
-        else if (s2 > s1) winnerText = `🏆 برنده نهایی: ${room.players.p2.name}`;
-        else winnerText = '🤝 بازی نهایی مساوی شد!';
+        if (s1 > s2) winnerText = `برنده نهایی: ${room.players.p1.name}`;
+        else if (s2 > s1) winnerText = `برنده نهایی: ${room.players.p2.name}`;
+        else winnerText = 'بازی نهایی مساوی شد!';
 
         document.getElementById('finalWinner').innerText = winnerText;
         document.getElementById('finalScores').innerText = `امتیازات: ${room.players.p1.name} (${s1}) - ${room.players.p2.name} (${s2})`;
