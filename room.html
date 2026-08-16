@@ -6,101 +6,197 @@
   <title>روم بازی - سنگ کاغذ قیچی</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --accent: #6366f1;
-      --accent-hover: #4f46e5;
-      --text: #f8fafc;
-      --text-dim: #94a3b8;
+      --bg: #000000;
+      --card-bg: rgba(16, 16, 16, 0.75);
+      --accent-purple: #8A2BE2;
+      --accent-blue: #1E90FF;
+      --accent-cyan: #00F3FF;
+      --accent-gold: #FFD700;
+      --text: #FFFFFF;
+      --text-dim: #E0E0E0;
       --danger: #ef4444;
       --success: #22c55e;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    
+    html, body {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    body { 
+      background-color: var(--bg); 
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(138, 43, 226, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(30, 144, 255, 0.25) 0%, transparent 45%);
+      color: var(--text-dim); 
+      display: flex; 
+      flex-direction: column; 
+    }
 
     /* Header & Top Bar */
     header {
-      background: var(--card-bg); border-bottom: 1px solid #334155; padding: 0.8rem 1.5rem;
-      display: flex; flex-direction: column; gap: 0.5rem;
+      background: var(--card-bg); 
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 243, 255, 0.3); 
+      box-shadow: 0 4px 20px rgba(0, 243, 255, 0.15);
+      padding: 0.6rem 1.2rem;
+      display: flex; 
+      flex-direction: column; 
+      gap: 0.4rem;
+      flex-shrink: 0;
     }
-    .top-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: var(--text-dim); }
-    .specs-btn { cursor: pointer; text-decoration: underline; color: #818cf8; }
+    .top-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-dim); }
+    .specs-btn { cursor: pointer; text-decoration: underline; color: var(--accent-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); }
     
     .match-header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 0.5rem 0; border-top: 1px solid #334155; margin-top: 0.3rem;
+      padding-top: 0.4rem; border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
     .player-box {
-      display: flex; flex-direction: column; align-items: center; gap: 0.3rem; width: 30%;
+      display: flex; flex-direction: column; align-items: center; gap: 0.2rem; width: 30%;
     }
-    .player-box .name { font-weight: bold; font-size: 1rem; color: #fff; text-align: center; }
-    .player-box .score { font-size: 1.2rem; color: var(--accent); font-weight: bold; }
+    .player-box .name { font-weight: bold; font-size: 0.95rem; color: var(--text); text-align: center; }
+    .player-box .score { font-size: 1.3rem; color: var(--accent-gold); font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
 
     .game-status { text-align: center; width: 40%; }
-    .round-info { font-size: 1.1rem; font-weight: bold; color: #f59e0b; }
-    .timer-display { font-size: 2rem; font-weight: 800; color: #ef4444; margin-top: 0.2rem; }
+    .round-info { font-size: 1rem; font-weight: bold; color: var(--accent-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.6); }
+    .timer-display { font-size: 1.8rem; font-weight: 800; color: var(--accent-gold); text-shadow: 0 0 12px rgba(255, 215, 0, 0.6); }
 
     /* Main Area */
     main {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 2rem; gap: 2rem;
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center;
+      padding: 1rem; 
+      gap: 1.5rem;
+      overflow: hidden;
     }
 
     .status-banner {
-      background: #334155; padding: 0.6rem 1.2rem; border-radius: 8px;
-      font-weight: 600; color: #fff; text-align: center;
+      background: rgba(16, 16, 16, 0.8); 
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+      backdrop-filter: blur(8px);
+      padding: 0.5rem 1.2rem; 
+      border-radius: 8px;
+      font-weight: 600; 
+      color: var(--text); 
+      text-align: center;
+      font-size: 0.95rem;
     }
 
     .choices-container {
-      display: flex; gap: 1.5rem; justify-content: center; width: 100%; max-width: 500px;
+      display: flex; gap: 1.2rem; justify-content: center; width: 100%; max-width: 500px;
     }
     .choice-btn {
-      flex: 1; background: var(--danger); border: none; border-radius: 16px; padding: 1.5rem 0;
-      color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s;
-      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      flex: 1; 
+      background: rgba(16, 16, 16, 0.6); 
+      border: 1px solid rgba(138, 43, 226, 0.5); 
+      border-radius: 16px; 
+      padding: 1.2rem 0;
+      color: var(--text); 
+      font-size: 1.1rem; 
+      font-weight: bold; 
+      cursor: pointer; 
+      transition: all 0.25s ease;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 0.4rem;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
     }
-    .choice-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .choice-btn.selected { background: var(--success) !important; transform: scale(1.05); }
+    .choice-btn:hover:not(:disabled) {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+      transform: translateY(-2px);
+    }
+    .choice-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .choice-btn.selected { 
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)) !important; 
+      border-color: #fff !important;
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.8) !important;
+      transform: scale(1.05); 
+    }
 
     /* Footer Controls */
     footer {
-      background: var(--card-bg); padding: 1rem; border-top: 1px solid #334155;
-      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card-bg); 
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 0.8rem 1.2rem; 
+      border-top: 1px solid rgba(0, 243, 255, 0.3);
+      box-shadow: 0 -4px 20px rgba(0, 243, 255, 0.15);
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      flex-shrink: 0;
     }
     .btn {
-      background: var(--accent); color: white; border: none; padding: 0.6rem 1.2rem;
-      border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); 
+      color: white; 
+      border: none; 
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: all 0.25s ease;
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.3);
     }
-    .btn:hover { background: var(--accent-hover); }
-    .btn-danger { background: var(--danger); }
-    .btn-danger:hover { background: #dc2626; }
-    .btn-success { background: var(--success); }
+    .btn:hover { 
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+      transform: translateY(-1px);
+    }
+    .btn-danger { 
+      background: rgba(16, 16, 16, 0.6); 
+      border: 1px solid var(--accent-purple);
+      color: var(--text);
+      backdrop-filter: blur(5px);
+      box-shadow: none;
+    }
+    .btn-danger:hover { 
+      background: rgba(239, 68, 68, 0.2); 
+      border-color: var(--danger);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    }
+    .btn-success { 
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); 
+    }
 
     /* Modals & Popups */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
       opacity: 0; pointer-events: none; transition: 0.25s; z-index: 1000;
     }
     .modal-overlay.active { opacity: 1; pointer-events: all; }
     .modal {
-      background: var(--card-bg); border: 1px solid #334155; width: 90%; max-width: 400px;
+      background: #101010; 
+      border: 1px solid var(--accent-cyan); 
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.3);
+      width: 90%; max-width: 400px;
       padding: 1.5rem; border-radius: 16px; text-align: center; transform: scale(0.9); transition: 0.25s;
     }
     .modal-overlay.active .modal { transform: scale(1); }
-    .modal h3 { margin-bottom: 0.8rem; color: #fff; }
+    .modal h3 { margin-bottom: 0.8rem; color: var(--text); font-size: 1.2rem; }
     .modal p { margin-bottom: 0.5rem; color: var(--text-dim); }
 
     /* Toast Alert */
     .toast {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-      background: #334155; color: #fff; padding: 0.8rem 1.5rem; border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: 0.3s; z-index: 2000; font-weight: 500;
+      background: #101010; color: var(--text); padding: 0.8rem 1.5rem; border-radius: 8px;
+      border: 1px solid var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); transition: 0.3s; z-index: 2000; font-weight: 500;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.error { background: var(--danger); }
-    .toast.success { background: var(--success); }
+    .toast.error { border-color: var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+    .toast.success { border-color: var(--success); box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
   </style>
 
   <!-- Firebase App & Database SDKs -->
@@ -163,7 +259,7 @@
   <!-- Modal: Spectators List -->
   <div class="modal-overlay" id="spectatorsModal">
     <div class="modal">
-      <h3>لیست تماشاچیان</h3>
+      <h3 style="color: var(--accent-cyan);">لیست تماشاچیان</h3>
       <div id="spectatorsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 1rem;">اطلاعاتی وجود ندارد.</div>
       <button class="btn btn-danger" style="width: 100%;" onclick="closeModal('spectatorsModal')">بستن</button>
     </div>
@@ -175,7 +271,7 @@
       <h3 id="resTitle">نتیجه راند</h3>
       <p id="resDesc"></p>
       <p id="resChoices" style="color: #fff; font-weight: bold; margin-top: 0.5rem;"></p>
-      <p style="color: #f59e0b; font-size: 0.85rem; margin-top: 1rem; border-top: 1px solid #334155; padding-top: 0.5rem;">
+      <p style="color: var(--accent-gold); font-size: 0.85rem; margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">
         برای رفتن به راند بعدی، روی دکمه «آماده هستم» کلیک کنید.
       </p>
     </div>
@@ -184,8 +280,8 @@
   <!-- Modal: Final Result -->
   <div class="modal-overlay" id="finalModal">
     <div class="modal">
-      <h3>🏆 نتیجه نهایی بازی</h3>
-      <p id="finalWinner" style="font-size: 1.2rem; color: #f59e0b; font-weight: bold; margin: 1rem 0;"></p>
+      <h3 style="color: var(--accent-gold);">🏆 نتیجه نهایی بازی</h3>
+      <p id="finalWinner" style="font-size: 1.2rem; color: var(--accent-cyan); font-weight: bold; margin: 1rem 0;"></p>
       <p id="finalScores" style="color: #fff; font-weight: bold;"></p>
       <button class="btn" style="width: 100%; margin-top: 1.5rem;" onclick="leaveRoom()">خروج به صفحه اصلی</button>
     </div>
@@ -364,7 +460,7 @@
       await roomRef.child(`ready/${myRole}`).set(!currentState);
     }
 
-    // Start 10s Countdown (Driven by P1 to DB, synced to all)
+        // Start 10s Countdown (Driven by P1 to DB, synced to all)
     async function startStartCountdown() {
       if (activeInterval) clearInterval(activeInterval);
       await roomRef.child('status').set('starting');
@@ -507,7 +603,7 @@
         title.style.color = 'var(--success)';
       } else if (res.winner === 'draw') {
         title.innerText = '🤝 این راند مساوی شد';
-        title.style.color = '#f59e0b';
+        title.style.color = 'var(--accent-gold)';
       } else if (myRole === 'p1' || myRole === 'p2') {
         title.innerText = '❌ شما این راند را باختید';
         title.style.color = 'var(--danger)';
