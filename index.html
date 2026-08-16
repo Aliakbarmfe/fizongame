@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بازی سنگ کاغذ قیچی - آنلاین</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* هدر بالای صفحه */
+    header {
+      width: 100%;
+      max-width: 900px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+    }
+
+    .btn-create-room {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-create-room:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .user-avatar {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      padding: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      border: 2px solid #818cf8;
+      word-break: break-all;
+      transition: all 0.2s;
+    }
+
+    .user-avatar:hover {
+      transform: scale(1.05);
+    }
+
+    /* بخش وسط - لیست روم‌ها */
+    main {
+      width: 100%;
+      max-width: 900px;
+      padding: 30px 20px;
+      flex: 1;
+    }
+
+    .main-title {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 22px;
+      color: #94a3b8;
+    }
+
+    .rooms-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .room-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .room-card:hover {
+      transform: translateY(-4px);
+      border-color: #6366f1;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .room-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #f1f5f9;
+      margin-bottom: 8px;
+    }
+
+    .room-id {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .room-badge {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: #334155;
+      color: #cbd5e1;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+
+    .no-rooms {
+      text-align: center;
+      grid-column: 1 / -1;
+      color: #64748b;
+      font-size: 16px;
+      margin-top: 40px;
+    }
+
+    /* استایل عمومی پاپ‌آپ‌ها Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      transform: scale(0.9);
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #f8fafc;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      outline: none;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .form-control:focus {
+      border-color: #6366f1;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0f172a;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid #334155;
+    }
+
+    .radio-item input {
+      accent-color: #6366f1;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.9;
+    }
+
+    .btn-close {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .auth-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-auth-choice {
+      background: #334155;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-auth-choice:hover {
+      background: #475569;
+    }
+
+    .error-msg {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- هدر -->
+  <header>
+    <button class="btn-create-room" onclick="handleCreateRoomClick()">ساخت روم</button>
+    <div class="user-avatar" id="userAvatarBtn" onclick="openModal('authModal')">
+      ورود / ثبت نام
+    </div>
+  </header>
+
+  <!-- بخش اصلی - لیست روم‌ها -->
+  <main>
+    <div class="main-title">لیست روم‌های فعال</div>
+    <div class="rooms-list" id="roomsList">
+      <div class="no-rooms">در حال دریافت لیست روم‌ها...</div>
+    </div>
+  </main>
+
+  <!-- ۱. پاپ‌آپ انتخاب ورود یا ثبت‌نام -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-card">
+      <button class="btn-close" onclick="closeModal('authModal')">&times;</button>
+      <div class="modal-title">ورود یا ثبت‌نام</div>
+      <div class="auth-choices">
+        <button class="btn-auth-choice" onclick="switchModal('authModal', 'registerModal')">ثبت نام جدید</button>
+        <button class="btn-auth-choice" onclick="switchModal('authModal', 'loginModal')">ورود با رمز عبور</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ۲. پاپ‌آپ ثبت نام -->
+  <div class="modal-overlay" id="registerModal">
+    <div class="modal-card">
+      <button class="btn-close" onclick="closeModal('registerModal')">&times;</button>
+      <div class="modal-title">ثبت نام</div>
+      <form id="registerForm" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label>نام (حداکثر ۶ حرف)</label>
+          <input type="text" id="regName" class="form-control" maxlength="6" required>
+        </div>
+        <div class="form-group">
+          <label>نام کاربری (حداقل ۶ حرف - انگلیسی و عدد)</label>
+          <input type="text" id="regUsername" class="form-control" minlength="6" required dir="ltr">
+        </div>
+        <div class="form-group">
+          <label>رمز عبور (حداقل ۶ کاراکتر)</label>
+          <input type="password" id="regPassword" class="form-control" minlength="6" required dir="ltr">
+        </div>
+        <div class="error-msg" id="regError"></div>
+        <button type="submit" class="btn-submit">تکمیل ثبت نام</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ۳. پاپ‌آپ ورود -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-card">
+      <button class="btn-close" onclick="closeModal('loginModal')">&times;</button>
+      <div class="modal-title">ورود به حساب</div>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>نام کاربری</label>
+          <input type="text" id="loginUsername" class="form-control" required dir="ltr">
+        </div>
+        <div class="form-group">
+          <label>رمز عبور</label>
+          <input type="password" id="loginPassword" class="form-control" required dir="ltr">
+        </div>
+        <div class="error-msg" id="loginError"></div>
+        <button type="submit" class="btn-submit">ورود</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ۴. پاپ‌آپ ساخت روم -->
+  <div class="modal-overlay" id="createRoomModal">
+    <div class="modal-card">
+      <button class="btn-close" onclick="closeModal('createRoomModal')">&times;</button>
+      <div class="modal-title">ساخت روم جدید</div>
+      <form id="createRoomForm" onsubmit="handleCreateRoomSubmit(event)">
+        <div class="form-group">
+          <label>نام روم (حداکثر ۱۲ حرف)</label>
+          <input type="text" id="roomName" class="form-control" maxlength="12" required>
+        </div>
+        <div class="form-group">
+          <label>آیدی روم (حداکثر ۶ حرف)</label>
+          <input type="text" id="roomId" class="form-control" maxlength="6" required dir="ltr">
+        </div>
+        <div class="form-group">
+          <label>رمز عبور (اختیاری)</label>
+          <input type="password" id="roomPass" class="form-control" dir="ltr" placeholder="در صورت خالی بودن عمومی است">
+        </div>
+        <div class="form-group">
+          <label>تعداد راندها (حداکثر ۵)</label>
+          <input type="number" id="roomRounds" class="form-control" min="1" max="5" value="3" required>
+        </div>
+        
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="playerRole" value="player" checked>
+            <span>خودم بازیکن هستم</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="playerRole" value="spectator">
+            <span>نظاره‌گر هستم</span>
+          </label>
+        </div>
+
+        <div class="error-msg" id="createRoomError"></div>
+        <button type="submit" class="btn-submit">ایجاد روم</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ۵. پاپ‌آپ ورود به روم رمزدار -->
+  <div class="modal-overlay" id="joinProtectedRoomModal">
+    <div class="modal-card">
+      <button class="btn-close" onclick="closeModal('joinProtectedRoomModal')">&times;</button>
+      <div class="modal-title">ورود به روم رمزدار</div>
+      <form id="joinProtectedForm" onsubmit="handleJoinProtectedRoom(event)">
+        <input type="hidden" id="selectedRoomKey">
+        <div class="form-group">
+          <label>رمز عبور روم را وارد کنید</label>
+          <input type="password" id="joinRoomPassword" class="form-control" required dir="ltr">
+        </div>
+        <div class="error-msg" id="joinRoomError"></div>
+        <button type="submit" class="btn-submit">ورود به روم</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- اسکریپت فایربیس به صورت Module -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // تنظیمات فایربیس پروژه‌
+    const firebaseConfig = {
+      apiKey: "AIzaSyClJLVE8SbUCoE-TaQXD77kELheELK6FCo",
+      authDomain: "fizongame-a1209.firebaseapp.com",
+      databaseURL: "https://fizongame-a1209-default-rtdb.firebaseio.com",
+      projectId: "fizongame-a1209",
+      storageBucket: "fizongame-a1209.firebasestorage.app",
+      messagingSenderId: "360630309827",
+      appId: "1:360630309827:web:43328c490a0713e760e376"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // اطلاعات کاربر جاری در LocalStorage ذخیره می‌شود
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+    // بارگذاری اولیه وضعیت کاربر
+    function updateUIUser() {
+      const avatarBtn = document.getElementById('userAvatarBtn');
+      if (currentUser) {
+        avatarBtn.textContent = currentUser.name;
+      } else {
+        avatarBtn.textContent = "ورود / ثبت نام";
+      }
+    }
+    updateUIUser();
+
+    // متدهای مدیریت Modalها
+    window.openModal = function(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    };
+
+    window.closeModal = function(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    };
+
+    window.switchModal = function(fromModal, toModal) {
+      closeModal(fromModal);
+      openModal(toModal);
+    };
+
+    // ۱. ثبت نام کاربر
+    window.handleRegister = async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const username = document.getElementById('regUsername').value.trim().toLowerCase();
+      const password = document.getElementById('regPassword').value.toLowerCase();
+      const errorEl = document.getElementById('regError');
+
+      errorEl.style.display = 'none';
+
+      // اعتبارسنجی نام کاربری (فقط انگلیسی و عدد)
+      const usernameRegex = /^[a-zA-Z0-9]+$/;
+      if (!usernameRegex.test(username)) {
+        errorEl.textContent = "نام کاربری فقط باید شامل حروف انگلیسی و عدد باشد.";
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const dbRef = ref(db);
+        const snapshot = await get(child(dbRef, `users/${username}`));
+
+        if (snapshot.exists()) {
+          errorEl.textContent = "این نام کاربری قبلاً انتخاب شده است. نام کاربری دیگری انتخاب کنید.";
+          errorEl.style.display = 'block';
+        } else {
+          // ذخیره کاربر جدید
+          const userData = { name, username, password };
+          await set(ref(db, `users/${username}`), userData);
+
+          currentUser = { name, username };
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          updateUIUser();
+
+          alert("ثبت نام با موفقیت انجام شد!");
+          closeModal('registerModal');
+        }
+      } catch (err) {
+        errorEl.textContent = "خطا در برقراری ارتباط با سرور.";
+        errorEl.style.display = 'block';
+      }
+    };
+
+    // ۲. ورود کاربر
+    window.handleLogin = async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value.toLowerCase();
+      const errorEl = document.getElementById('loginError');
+
+      errorEl.style.display = 'none';
+
+      try {
+        const dbRef = ref(db);
+        const snapshot = await get(child(dbRef, `users/${username}`));
+
+        if (!snapshot.exists()) {
+          errorEl.textContent = "نام کاربری یافت نشد.";
+          errorEl.style.display = 'block';
+        } else {
+          const userData = snapshot.val();
+          if (userData.password === password) {
+            currentUser = { name: userData.name, username: userData.username };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            updateUIUser();
+
+            alert("ورود با موفقیت انجام شد!");
+            closeModal('loginModal');
+          } else {
+            errorEl.textContent = "رمز عبور اشتباه است.";
+            errorEl.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        errorEl.textContent = "خطا در برقراری ارتباط با سرور.";
+        errorEl.style.display = 'block';
+      }
+    };
+
+    // ۳. مدیریت کلیک روی ساخت روم
+    window.handleCreateRoomClick = function() {
+      if (!currentUser) {
+        alert("ابتدا باید وارد حساب کاربری خود شوید یا ثبت‌نام کنید.");
+        openModal('authModal');
+      } else {
+        openModal('createRoomModal');
+      }
+    };
+
+    // ۴. ثبت روم جدید
+    window.handleCreateRoomSubmit = async function(e) {
+      e.preventDefault();
+      const roomName = document.getElementById('roomName').value.trim();
+      const roomId = document.getElementById('roomId').value.trim();
+      const roomPass = document.getElementById('roomPass').value.trim();
+      const roomRounds = parseInt(document.getElementById('roomRounds').value);
+      const role = document.querySelector('input[name="playerRole"]:checked').value;
+      const errorEl = document.getElementById('createRoomError');
+
+      errorEl.style.display = 'none';
+
+      try {
+        const roomRef = ref(db, `rooms/${roomId}`);
+        const snapshot = await get(roomRef);
+
+        if (snapshot.exists()) {
+          errorEl.textContent = "این آیدی روم قبلاً استفاده شده است.";
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        const roomData = {
+          name: roomName,
+          id: roomId,
+          password: roomPass || null,
+          totalRounds: roomRounds,
+          currentRound: 1,
+          status: 'waiting', // waiting, playing, finished
+          spectator: role === 'spectator' ? currentUser : null,
+          player1: role === 'player' ? { ...currentUser, ready: false, score: 0 } : null,
+          player2: null
+        };
+
+        await set(roomRef, roomData);
+        closeModal('createRoomModal');
+        
+        // انتقال مستقیم سازنده به صفحه روم
+        window.location.href = `room.html?id=${roomId}`;
+
+      } catch (err) {
+        errorEl.textContent = "خطا در ساخت روم.";
+        errorEl.style.display = 'block';
+      }
+    };
+
+    // ۵. دریافت لحظه‌ای لیست روم‌ها
+    const roomsListContainer = document.getElementById('roomsList');
+    const roomsRef = ref(db, 'rooms');
+
+    onValue(roomsRef, (snapshot) => {
+      roomsListContainer.innerHTML = '';
+      if (!snapshot.exists()) {
+        roomsListContainer.innerHTML = '<div class="no-rooms">هیچ رومی یافت نشد. اولین روم را شما بسازید!</div>';
+        return;
+      }
+
+      const rooms = snapshot.val();
+      let hasRooms = false;
+
+      for (let key in rooms) {
+        const room = rooms[key];
+        hasRooms = true;
+
+        const card = document.createElement('div');
+        card.className = 'room-card';
+        card.onclick = () => joinRoomClick(room);
+
+        const isLocked = room.password ? '🔒 رمزدار' : '🌐 عمومی';
+
+        card.innerHTML = `
+          <span class="room-badge">${isLocked}</span>
+          <div class="room-name">${room.name}</div>
+          <div class="room-id">آیدی: ${room.id}</div>
+        `;
+
+        roomsListContainer.appendChild(card);
+      }
+
+      if (!hasRooms) {
+        roomsListContainer.innerHTML = '<div class="no-rooms">هیچ رومی یافت نشد.</div>';
+      }
+    });
+
+    // ۶. منطق کلیک روی کارت روم
+    let targetRoom = null;
+    function joinRoomClick(room) {
+      if (!currentUser) {
+        alert("برای ورود به روم ابتدا باید وارد حساب کاربری شوید.");
+        openModal('authModal');
+        return;
+      }
+
+      targetRoom = room;
+
+      if (room.password) {
+        document.getElementById('selectedRoomKey').value = room.id;
+        document.getElementById('joinRoomPassword').value = '';
+        document.getElementById('joinRoomError').style.display = 'none';
+        openModal('joinProtectedRoomModal');
+      } else {
+        window.location.href = `room.html?id=${room.id}`;
+      }
+    }
+
+    window.handleJoinProtectedRoom = function(e) {
+      e.preventDefault();
+      const enteredPass = document.getElementById('joinRoomPassword').value.trim();
+      const errorEl = document.getElementById('joinRoomError');
+
+      if (enteredPass === targetRoom.password) {
+        closeModal('joinProtectedRoomModal');
+        window.location.href = `room.html?id=${targetRoom.id}`;
+      } else {
+        errorEl.textContent = "رمز عبور اشتباه است.";
+                errorEl.style.display = 'block';
+      }
+    };
+  </script>
+</body>
+</html>
