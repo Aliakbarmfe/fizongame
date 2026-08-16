@@ -113,6 +113,15 @@
     }
     
     /* Scrollbar Styling */
+        .room-list { 
+      display: flex;
+      flex-direction: column;
+      gap: 1rem; 
+      overflow-y: auto;
+      padding-right: 4px;
+      flex: 1;
+    }
+
     .room-list::-webkit-scrollbar {
       width: 6px;
     }
@@ -138,12 +147,17 @@
       transition: 0.2s;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      
+      /* اضافه شده برای جلوگیری از جمع شدن و کوچک شدن کارت‌ها */
+      flex-shrink: 0; 
+      min-height: 72px;
     }
     .room-card:hover { 
       border-color: var(--accent-cyan); 
       box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
       transform: translateY(-2px); 
     }
+
     .room-info h4 { 
       font-size: 1.1rem; 
       color: #FFFFFF; 
