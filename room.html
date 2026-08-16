@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اتاق بازی سنگ کاغذ قیچی</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+    }
+
+    /* بالای صفحه - اطلاعات نظاره‌گر و راندها */
+    header {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .spectator-info {
+      background: #334155;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #cbd5e1;
+      display: none;
+    }
+
+    .round-info {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    /* بخش بازیکنان (چپ و راست) */
+    .players-container {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .player-card {
+      flex: 1;
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 16px;
+      padding: 15px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .player-card.active {
+      border-color: #10b981;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    }
+
+    .player-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #f1f5f9;
+    }
+
+    .player-score {
+      font-size: 14px;
+      color: #10b981;
+      font-weight: bold;
+    }
+
+    .player-status {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 5px;
+    }
+
+    /* تایمر و پیام مرکز صفحه */
+    .game-status-box {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .status-message {
+      font-size: 20px;
+      font-weight: bold;
+      color: #38bdf8;
+      margin-bottom: 10px;
+      min-height: 30px;
+    }
+
+    .timer-display {
+      font-size: 48px;
+      font-weight: bold;
+      color: #f43f5e;
+      background: #1e293b;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      border: 3px solid #f43f5e;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+    }
+
+    /* گزینه‌های بازی (سنگ، کاغذ، قیچی) */
+    .choices-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 30px;
+    }
+
+    .choice-btn {
+      flex: 1;
+      background: #ef4444; /* رنگ اولیه سرخ */
+      color: white;
+      border: none;
+      padding: 20px 10px;
+      border-radius: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .choice-btn.selected {
+      background: #10b981 !important; /* سبز شدن هنگام انتخاب */
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      transform: scale(1.05);
+    }
+
+    .choice-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* دکمه آماده هستم */
+    .btn-ready {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-ready.is-ready {
+      background: #475569;
+      box-shadow: none;
+    }
+
+    /* پاپ‌آپ‌ها */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      width: 90%;
+      max-width: 420px;
+      border-radius: 16px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .modal-body {
+      font-size: 15px;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .btn-modal-action {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- بالای صفحه -->
+  <header>
+    <div class="spectator-info" id="spectatorBox">
+      👁️ نظاره‌گر: <span id="spectatorName">-</span> (آیدی: <span id="spectatorId">-</span>)
+    </div>
+    <div class="round-info">
+      راند <span id="currentRoundDisplay">۱</span> از <span id="totalRoundsDisplay">۳</span>
+    </div>
+  </header>
+
+  <!-- کارت‌های بازیکنان -->
+  <div class="players-container">
+    <div class="player-card" id="p1Card">
+      <div class="player-name" id="p1Name">در حال انتظار...</div>
+      <div class="player-score">بردها: <span id="p1Score">0</span></div>
+      <div class="player-status" id="p1Status">نامشخص</div>
+    </div>
+    <div class="player-card" id="p2Card">
+      <div class="player-name" id="p2Name">در حال انتظار...</div>
+      <div class="player-score">بردها: <span id="p2Score">0</span></div>
+      <div class="player-status" id="p2Status">نامشخص</div>
+    </div>
+  </div>
+
+  <!-- تایمر و وضعیت -->
+  <div class="game-status-box">
+    <div class="status-message" id="statusMessage">منتظر آماده شدن بازیکنان...</div>
+    <div class="timer-display" id="timerDisplay">--</div>
+  </div>
+
+  <!-- دکمه‌های انتخاب حرکت -->
+  <div class="choices-container">
+    <button class="choice-btn" id="btn-rock" onclick="makeChoice('rock')" disabled>
+      <span>✊</span>
+      <span>سنگ</span>
+    </button>
+    <button class="choice-btn" id="btn-paper" onclick="makeChoice('paper')" disabled>
+      <span>✋</span>
+      <span>کاغذ</span>
+    </button>
+    <button class="choice-btn" id="btn-scissors" onclick="makeChoice('scissors')" disabled>
+      <span>✌️</span>
+      <span>قیچی</span>
+    </button>
+  </div>
+
+  <!-- دکمه آماده هستم -->
+  <button class="btn-ready" id="btnReady" onclick="toggleReady()">آماده هستم</button>
+
+  <!-- پاپ‌آپ نتیجه راند -->
+  <div class="modal-overlay" id="roundResultModal">
+    <div class="modal-card">
+      <div class="modal-title" id="roundModalTitle">نتیجه راند</div>
+      <div class="modal-body" id="roundModalBody">...</div>
+      <button class="btn-modal-action" onclick="closeRoundModal()">متوجه شدم</button>
+    </div>
+  </div>
+
+  <!-- پاپ‌آپ نتیجه نهایی -->
+  <div class="modal-overlay" id="finalResultModal">
+    <div class="modal-card">
+      <div class="modal-title" id="finalModalTitle">پایان بازی!</div>
+      <div class="modal-body" id="finalModalBody">...</div>
+      <button class="btn-modal-action" onclick="leaveRoom()">خروج به صفحه اصلی</button>
+    </div>
+  </div>
+
+  <!-- اسکریپت فایربیس -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyClJLVE8SbUCoE-TaQXD77kELheELK6FCo",
+      authDomain: "fizongame-a1209.firebaseapp.com",
+      databaseURL: "https://fizongame-a1209-default-rtdb.firebaseio.com",
+      projectId: "fizongame-a1209",
+      storageBucket: "fizongame-a1209.firebasestorage.app",
+      messagingSenderId: "360630309827",
+      appId: "1:360630309827:web:43328c490a0713e760e376"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+      alert("شما وارد حساب کاربری نشده‌اید.");
+      window.location.href = 'index.html';
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('id');
+
+    if (!roomId) {
+      window.location.href = 'index.html';
+    }
+
+    const roomRef = ref(db, `rooms/${roomId}`);
+    let roomData = null;
+    let myRole = 'spectator'; // player1, player2, spectator
+    let currentSelection = null;
+    let timerInterval = null;
+    let localTimer = 0;
+
+    // ۱. ورود کاربر به روم و تعیین نقش
+    async function initRoom() {
+      const snapshot = await get(roomRef);
+      if (!snapshot.exists()) {
+        alert("روم یافت نشد یا حذف شده است.");
+        window.location.href = 'index.html';
+        return;
+      }
+
+      roomData = snapshot.val();
+
+      // تعیین نقش کاربر
+      if (roomData.player1 && roomData.player1.username === currentUser.username) {
+        myRole = 'player1';
+      } else if (roomData.player2 && roomData.player2.username === currentUser.username) {
+        myRole = 'player2';
+      } else if (roomData.spectator && roomData.spectator.username === currentUser.username) {
+        myRole = 'spectator';
+      } else {
+        // اگر کاربر جدید وارد شده
+        if (!roomData.player1) {
+          myRole = 'player1';
+          await update(ref(db, `rooms/${roomId}/player1`), { ...currentUser, ready: false, score: 0 });
+        } else if (!roomData.player2) {
+          myRole = 'player2';
+          await update(ref(db, `rooms/${roomId}/player2`), { ...currentUser, ready: false, score: 0 });
+        } else {
+          myRole = 'spectator';
+        }
+      }
+
+      if (myRole === 'spectator') {
+        document.getElementById('btnReady').style.display = 'none';
+      }
+
+      listenToRoom();
+    }
+
+    // ۲. دریافت تغییرات آنلاین دیتابیس
+    function listenToRoom() {
+      onValue(roomRef, (snapshot) => {
+        if (!snapshot.exists()) {
+          alert("بازی به پایان رسید و روم حذف شد.");
+          window.location.href = 'index.html';
+          return;
+        }
+
+        const prevStatus = roomData ? roomData.status : null;
+        const prevRound = roomData ? roomData.currentRound : null;
+        roomData = snapshot.val();
+
+        updateUI();
+
+        // شروع آماده‌سازی (شمارش معکوس ۱۰ ثانیه‌ای)
+        if (roomData.player1?.ready && roomData.player2?.ready && roomData.status === 'waiting') {
+          if (myRole === 'player1') {
+            startStartCountdown();
+          }
+        }
+
+        // شروع راند و تایمر ۱۵ ثانیه‌ای
+        if (roomData.status === 'playing' && (prevStatus !== 'playing' || prevRound !== roomData.currentRound)) {
+          startRoundTimer();
+        }
+      });
+    }
+
+    // ۳. به‌روزرسانی رابط کاربری (UI)
+    function updateUI() {
+      // نظاره‌گر
+      if (roomData.spectator) {
+        document.getElementById('spectatorBox').style.display = 'block';
+        document.getElementById('spectatorName').textContent = roomData.spectator.name;
+        document.getElementById('spectatorId').textContent = roomData.spectator.username;
+      }
+
+      // راندها
+      document.getElementById('currentRoundDisplay').textContent = roomData.currentRound;
+      document.getElementById('totalRoundsDisplay').textContent = roomData.totalRounds;
+
+      // بازیکن اول
+      if (roomData.player1) {
+        document.getElementById('p1Name').textContent = roomData.player1.name;
+        document.getElementById('p1Score').textContent = roomData.player1.score || 0;
+        document.getElementById('p1Status').textContent = roomData.player1.ready ? "🟢 آماده" : "🔴 در حال انتظار";
+      }
+
+      // بازیکن دوم
+      if (roomData.player2) {
+        document.getElementById('p2Name').textContent = roomData.player2.name;
+        document.getElementById('p2Score').textContent = roomData.player2.score || 0;
+        document.getElementById('p2Status').textContent = roomData.player2.ready ? "🟢 آماده" : "🔴 در حال انتظار";
+      }
+
+      // وضعیت دکمه ready
+      const readyBtn = document.getElementById('btnReady');
+      const isIReady = roomData[myRole]?.ready;
+      if (isIReady) {
+        readyBtn.textContent = "منتظر حریف...";
+        readyBtn.classList.add('is-ready');
+      } else {
+        readyBtn.textContent = "آماده هستم";
+        readyBtn.classList.remove('is-ready');
+      }
+    }
+
+    // ۴. تغییر وضعیت آماده بودن (Ready)
+    window.toggleReady = async function() {
+      if (myRole === 'spectator' || !roomData) return;
+      const currentReady = roomData[myRole]?.ready || false;
+      await update(ref(db, `rooms/${roomId}/${myRole}`), { ready: !currentReady });
+    };
+
+    // ۵. شمارش معکوس ۱۰ ثانیه‌ای قبل از شروع
+    async function startStartCountdown() {
+      await update(roomRef, { status: 'starting' });
+      let count = 10;
+      
+      const interval = setInterval(async () => {
+        document.getElementById('statusMessage').textContent = `بازی پس از ${count} ثانیه شروع می‌شود...`;
+        document.getElementById('timerDisplay').textContent = count;
+        count--;
+
+        if (count < 0) {
+          clearInterval(interval);
+          if (myRole === 'player1') {
+            await update(roomRef, { status: 'playing', currentRound: 1 });
+          }
+        }
+      }, 1000);
+    }
+
+    // ۶. تایمر ۱۵ ثانیه‌ای راند
+    function startRoundTimer() {
+      clearInterval(timerInterval);
+      localTimer = 15;
+      currentSelection = null;
+      resetChoiceButtons();
+
+      if (myRole === 'player1' || myRole === 'player2') {
+        enableChoiceButtons(true);
+      }
+
+      document.getElementById('statusMessage').textContent = "یکی از گزینه‌ها را انتخاب کنید!";
+
+      timerInterval = setInterval(() => {
+        document.getElementById('timerDisplay').textContent = localTimer;
+        localTimer--;
+
+        if (localTimer < 0) {
+          clearInterval(timerInterval);
+          enableChoiceButtons(false);
+          if (myRole === 'player1') {
+            evaluateRound();
+          }
+        }
+      }, 1000);
+    }
+
+    // ۷. انتخاب سنگ / کاغذ / قیچی
+    window.makeChoice = async function(choice) {
+      if (myRole === 'spectator') return;
+
+      currentSelection = choice;
+      resetChoiceButtons();
+
+      const selectedBtn = document.getElementById(`btn-${choice}`);
+      selectedBtn.classList.add('selected');
+
+      // ذخیره انتخاب در فایربیس
+      await update(ref(db, `rooms/${roomId}/${myRole}`), { move: choice });
+    };
+
+    function resetChoiceButtons() {
+      ['rock', 'paper', 'scissors'].forEach(c => {
+        document.getElementById(`btn-${c}`).classList.remove('selected');
+      });
+    }
+
+    function enableChoiceButtons(enable) {
+      ['rock', 'paper', 'scissors'].forEach(c => {
+        document.getElementById(`btn-${c}`).disabled = !enable;
+      });
+    }
+
+    // ۸. ارزیابی برنده راند (توسط بازیکن اول اجرا و همگام می‌شود)
+    async function evaluateRound() {
+      const snap = await get(roomRef);
+      const data = snap.val();
+
+      const p1Move = data.player1?.move || null;
+      const p2Move = data.player2?.move || null;
+
+      let winner = null; // 'player1', 'player2', 'draw', 'p1_timeout', 'p2_timeout', 'both_timeout'
+
+      if (!p1Move && !p2Move) {
+        winner = 'both_timeout';
+      } else if (!p1Move) {
+        winner = 'p1_timeout'; // بازیکن دوم برنده می‌شود
+      } else if (!p2Move) {
+        winner = 'p2_timeout'; // بازیکن اول برنده می‌شود
+      } else if (p1Move === p2Move) {
+        winner = 'draw';
+      } else if (
+        (p1Move === 'rock' && p2Move === 'scissors') ||
+        (p1Move === 'paper' && p2Move === 'rock') ||
+        (p1Move === 'scissors' && p2Move === 'paper')
+      ) {
+        winner = 'player1';
+      } else {
+        winner = 'player2';
+      }
+
+      let newP1Score = data.player1?.score || 0;
+      let newP2Score = data.player2?.score || 0;
+
+      if (winner === 'player1' || winner === 'p2_timeout') newP1Score++;
+      if (winner === 'player2' || winner === 'p1_timeout') newP2Score++;
+
+      // به‌روزرسانی نتایج در دیتابیس
+      await update(roomRef, {
+        'player1/score': newP1Score,
+        'player2/score': newP2Score,
+        lastRoundResult: {
+          winner,
+          p1Move: p1Move || 'هیچی',
+          p2Move: p2Move || 'هیچی'
+        }
+      });
+
+      showRoundResultPopup(winner, p1Move, p2Move, data);
+    }
+
+    // ۹. نمایش پاپ‌آپ نتیجه راند
+    function showRoundResultPopup(winner, p1Move, p2Move, data) {
+      const modal = document.getElementById('roundResultModal');
+      const title = document.getElementById('roundModalTitle');
+      const body = document.getElementById('roundModalBody');
+
+      const translateMove = (m) => {
+        if (m === 'rock') return 'سنگ ✊';
+        if (m === 'paper') return 'کاغذ ✋';
+        if (m === 'scissors') return 'قیچی ✌️';
+        return 'هیچی ❌';
+      };
+
+      let resultText = "";
+
+      if (winner === 'both_timeout') {
+        resultText = "هیچ‌کدام از بازیکنان منطبق با زمان حرکتی انتخاب نکردند!";
+      } else if (winner === 'p1_timeout') {
+        resultText = `چون ${data.player1.name} حرکتی انتخاب نکرد، ${data.player2.name} برنده شد!`;
+      } else if (winner === 'p2_timeout') {
+        resultText = `چون ${data.player2.name} حرکتی انتخاب نکرد، ${data.player1.name} برنده شد!`;
+      } else if (winner === 'draw') {
+        resultText = "این راند مساوی شد!";
+      } else {
+        const winnerObj = winner === 'player1' ? data.player1 : data.player2;
+        resultText = `برنده راند: ${winnerObj.name} (آیدی: ${winnerObj.username})`;
+      }
+
+      const myMoveStr = myRole === 'player1' ? translateMove(p1Move) : translateMove(p2Move);
+      const oppMoveStr = myRole === 'player1' ? translateMove(p2Move) : translateMove(p1Move);
+
+      title.textContent = "نتیجه راند";
+      body.innerHTML = `
+        <p style="margin-bottom:10px; font-weight:bold; color:#38bdf8;">${resultText}</p>
+        ${myRole !== 'spectator' ? `<p>انتخاب شما: <b>${myMoveStr}</b></p><p>انتخاب حریف: <b>${oppMoveStr}</b></p>` : ''}
+      `;
+
+      modal.classList.add('active');
+    }
+
+    // ۱۰. بستن پاپ‌آپ راند و رفتن به راند بعدی یا پایان بازی
+    window.closeRoundModal = async function() {
+      document.getElementById('roundResultModal').classList.remove('active');
+
+      if (myRole === 'player1') {
+        // پاکسازی حرکت‌های قبلی
+        await update(roomRef, {
+          'player1/move': null,
+          'player2/move': null
+        });
+
+        if (roomData.currentRound < roomData.totalRounds) {
+          await update(roomRef, { currentRound: roomData.currentRound + 1 });
+        } else {
+          // پایان بازی
+          finishGame();
+        }
+      }
+    };
+
+    // ۱۱. پاپ‌آپ و مراحل پایان کل بازی
+    async function finishGame() {
+      const snap = await get(roomRef);
+      const data = snap.val();
+
+      const p1Score = data.player1?.score || 0;
+      const p2Score = data.player2?.score || 0;
+
+      let winnerText = "";
+      if (p1Score > p2Score) {
+        winnerText = `برنده نهایی: ${data.player1.name} 🎉`;
+      } else if (p2Score > p1Score) {
+        winnerText = `برنده نهایی: ${data.player2.name} 🎉`;
+      } else {
+        winnerText = "بازی نهایی مساوی شد! 🤝";
+      }
+
+      const modal = document.getElementById('finalResultModal');
+      const body = document.getElementById('finalModalBody');
+
+      body.innerHTML = `
+        <h3 style="color:#10b981; margin-bottom:15px;">${winnerText}</h3>
+        <p>${data.player1.name}: ${p1Score} برد</p>
+        <p>${data.player2.name}: ${p2Score} برد</p>
+      `;
+
+      modal.classList.add('active');
+
+      // حذف روم از فایربیس
+      setTimeout(() => {
+        remove(roomRef);
+      }, 3000);
+    }
+
+    // ۱۲. خروج از روم و برگشت به صفحه اصلی
+    window.leaveRoom = function() {
+      window.location.href = 'index.html';
+    };
+
+    // شروع اجرای روم
+    initRoom();
+  </script>
+</body>
+</html>
